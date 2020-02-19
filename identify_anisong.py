@@ -11,10 +11,12 @@ import subprocess
 conn = sqlite3.connect("anisong.db")
 
 def identify_anisong(title,artist=None):
+    #fuzzy match title with song titles from database using Levenshtein distance: https://en.wikipedia.org/wiki/Levenshtein_distance
     if artist is not None:
         pass
     else:
-        song = process.extractOne(title, conn.execute("select title_en from anisong"),score_cutoff=85) #fuzzy match title with song titles from database
+        #fuzzy match title with song titles from database using Levenshtein distance: https://en.wikipedia.org/wiki/Levenshtein_distance
+        song = process.extractOne(title, conn.execute("select title_en from anisong"),score_cutoff=85) 
         if song is None:
             return None
         return conn.execute("select anime,type,start_ep,end_ep from anisong where title_en = ?",song[0]).fetchone() + (song[1],)
