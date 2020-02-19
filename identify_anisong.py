@@ -21,6 +21,46 @@ def identify_anisong(title,artist=None):
             return None
         return conn.execute("select anime,type,start_ep,end_ep from anisong where title_en = ?",song[0]).fetchone() + (song[1],)
 
+
+
+#TF-IDF approach
+import pandas as pd, numpy as np, re
+from sparse_dot_topn import awesome_cossim_topn
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse import csr_matrix
+
+conn.row_factory = lambda cursor, row: row[0]
+
+songs = conn.execute("select title_en from anisong").fetchall()
+
+def ngrams(string, n=4):
+    try:
+        string = (re.sub(r'[,-./]|\sBD',r'', string)).upper()
+        ngrams = zip(*[string[i:] for i in range(n)])
+        return [''.join(ngram) for ngram in ngrams]
+    except TypeError:
+        print(string)
+        raise
+
+vectorizer = TfidfVectorizer(min_df=1, analyzer=ngrams)
+tf_idf_matrix_songs = vectorizer.fit_transform(songs)
+conn.row_factory = None
+
+def identify_anisong_tf(title,artist=None):
+    #fuzzy match title with song titles from database using Levenshtein distance: https://en.wikipedia.org/wiki/Levenshtein_distance
+    if artist is not None:
+        pass
+    else:
+        tf_idf_matrix_test = vectorizer.transform([title])
+        matches = awesome_cossim_topn(tf_idf_matrix_test, tf_idf_matrix_songs.transpose(), 1, 0)
+        song2 = songs[matches.nonzero()[1][0]]
+        confidence = int(matches.data[0]*100)
+        if confidence < 55:
+            return None
+        return conn.execute("select anime,type,start_ep,end_ep from anisong where title_en = ?",(song2,)).fetchone() + (confidence,)
+
+
+
 def change_wallpaper(title):
     #todo: change this to use dbus interface instead of running another program
     cmd = f' var allDesktops = desktops(); print (allDesktops); for (i=0;i<allDesktops.length;i++) {{{{ d = allDesktops[i]; d.wallpaperPlugin = "org.kde.image"; d.currentConfigGroup = Array("Wallpaper","org.kde.image", "General"); d.writeConfig("Image", "file:///home/minato/Development/anisong/wallpaper/{title}.jpg")}}}}' 
@@ -38,7 +78,7 @@ while True:
     title = m.Metadata['xesam:title']
     if title != prev_title:
         try:
-            anime,song_type,start_ep,end_ep,confidence = identify_anisong(title)
+            anime,song_type,start_ep,end_ep,confidence = identify_anisong_tf(title)
             print(f"{title} : {anime} {song_type} eps {start_ep}-{end_ep} confidence:{confidence}")
             notifications.Notify('anisong_detector', 0, 'dialog-information', title, f"{anime} {song_type} eps {start_ep}-{end_ep}", [], {}, 5000)
             change_wallpaper(anime)
