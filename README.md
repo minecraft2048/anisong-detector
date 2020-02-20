@@ -17,7 +17,7 @@ https://www.reddit.com/r/Python/comments/f68eo9/change_wallpaper_to_the_currentl
    - [fuzzywuzzy](https://pypi.org/project/fuzzywuzzy/)
    - [sparse-dot-topn](https://github.com/ing-bank/sparse_dot_topn)
 2. Download some anime wallpaper and put it in wallpaper folder
-3. Rename the wallpapers to the anime title that is in MyAnimeList website. For example for a Bleach wallpaper, name it `Bleach.jpg`
+3. Rename the wallpapers to the anime title that is the main title in MyAnimeList website . For example for Naruto: Shippuden wallpaper, name it `Naruto: Shippuuden.jpg`, __not__ `Naruto: Shippuden.jpg`. You can use the same wallpaper for multiple animes by copying it and pasting it with the name of the animes you want that wallpaper to share with
 
 
 ## Usage
