@@ -49,7 +49,8 @@ print(f"Matrix size: {tf_idf_matrix_songs.data.nbytes + tf_idf_matrix_songs.indp
 conn.row_factory = None
 
 def identify_anisong_tf(title,artist=None):
-    #fuzzy match title with song titles from database using Levenshtein distance: https://en.wikipedia.org/wiki/Levenshtein_distance
+    #fuzzy match title with song titles from database using cosine similarity over TF-IDF matrix
+    #
     if artist is not None:
         pass
     else:
