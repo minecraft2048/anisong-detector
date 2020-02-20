@@ -29,9 +29,9 @@ from sparse_dot_topn import awesome_cossim_topn
 from sklearn.feature_extraction.text import TfidfVectorizer
 from scipy.sparse import csr_matrix
 
-conn.row_factory = lambda cursor, row: row[0]
-
-songs = conn.execute("select title_en from anisong").fetchall()
+songs = [None] * (conn.execute("select count(*) from anisong").fetchone()[0])
+for song in conn.execute("select rowid,title_en,anime from anisong"):
+    songs[song[0]-1] = song[1]
 
 def ngrams(string, n=4):
     try:
@@ -42,8 +42,10 @@ def ngrams(string, n=4):
         print(string)
         raise
 
-vectorizer = TfidfVectorizer(min_df=1, analyzer=ngrams)
+vectorizer = TfidfVectorizer(min_df=1, analyzer='char',ngram_range=(3,3))
+print("Building TF-IDF matching matrix")
 tf_idf_matrix_songs = vectorizer.fit_transform(songs)
+print(f"Matrix size: {tf_idf_matrix_songs.data.nbytes + tf_idf_matrix_songs.indptr.nbytes + tf_idf_matrix_songs.indices.nbytes} bytes")
 conn.row_factory = None
 
 def identify_anisong_tf(title,artist=None):
@@ -55,9 +57,9 @@ def identify_anisong_tf(title,artist=None):
         matches = awesome_cossim_topn(tf_idf_matrix_test, tf_idf_matrix_songs.transpose(), 1, 0)
         song2 = songs[matches.nonzero()[1][0]]
         confidence = int(matches.data[0]*100)
-        if confidence < 55:
-            return None
-        return conn.execute("select anime,type,start_ep,end_ep from anisong where title_en = ?",(song2,)).fetchone() + (confidence,)
+        #print(confidence)
+        #print(song2)
+        return conn.execute(f"select anime,type,start_ep,end_ep from anisong where rowid = {matches.nonzero()[1][0]}").fetchone() + (confidence,)
 
 
 
