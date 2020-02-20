@@ -9,11 +9,10 @@ import sys
 conn = sqlite3.connect('anisong.db')
 c = conn.cursor()
 
-anime = Anime(34566)
+anime = Anime(6702)
 
 if anime.ending_themes  is not None:
     for song1 in anime.ending_themes:
-        print(song1)
         song1 = song1.lstrip()
         ans = parse.parse('"{title_en} ({title_jp})" by {artist} (eps {start_ep}-{end_ep})', song1)
         if ans is None:
