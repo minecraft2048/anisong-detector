@@ -3,3 +3,4 @@ anisong.db-journal
 .vscode/
 .mypy_cache/
 anisong.db
+raw_data/*
